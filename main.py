@@ -1,4 +1,5 @@
 import os
+import stat
 import tempfile
 from pathlib import Path
 
@@ -25,11 +26,14 @@ def main():
             temporary = Path(file.name)
             file.write(expected)
         os.replace(temporary, entry)
+        entry.chmod(0o644)
     finally:
         if temporary is not None:
             temporary.unlink(missing_ok=True)
     if entry.read_bytes() != expected:
         raise IOError("Entry failed byte-for-byte verification")
+    if stat.S_IMODE(entry.stat().st_mode) != 0o644:
+        raise IOError("Entry permissions are not 0644")
 
 
 if __name__ == "__main__":
